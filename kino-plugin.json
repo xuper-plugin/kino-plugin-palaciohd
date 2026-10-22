@@ -1,0 +1,155 @@
+{
+  "id": "palaciohd",
+  "name": "Palacio HD",
+  "version": "1.0.0",
+  "apiVersion": 9,
+  "entry": "plugin.js",
+  "description": "Puente a un servidor HD (protocolo de Stremio): películas y series con los títulos de TMDB, y TV en vivo. El servidor mantiene las fuentes.",
+  "author": "xuper-plugin",
+  "homepage": "https://github.com/xuper-plugin/kino-plugin-palaciohd",
+  "hosts": [
+    "hd.plavio.site"
+  ],
+  "capabilities": [
+    "search",
+    "home",
+    "browse",
+    "episodes",
+    "resolve",
+    "channels",
+    "subtitles",
+    "download"
+  ],
+  "streamHosts": "any",
+  "liveStreamHosts": "any",
+  "categories": [
+    "movies",
+    "series",
+    "live"
+  ],
+  "color": "#1FA97A",
+  "icon": "icon.png",
+  "telemetry": true,
+  "section": {
+    "label": "Palacio HD",
+    "labelEn": "Palacio HD"
+  },
+  "settings": [
+    {
+      "key": "homeRows",
+      "type": "select",
+      "label": "Filas en Inicio",
+      "labelEn": "Rows on Home",
+      "default": "4",
+      "options": [
+        {
+          "value": "2",
+          "label": "2",
+          "labelEn": "2"
+        },
+        {
+          "value": "4",
+          "label": "4",
+          "labelEn": "4"
+        },
+        {
+          "value": "8",
+          "label": "8",
+          "labelEn": "8"
+        }
+      ],
+      "hint": "Cine y series se alternan. Menos filas cargan más rápido.",
+      "hintEn": "Movies and series alternate. Fewer rows load faster."
+    },
+    {
+      "key": "quality",
+      "type": "select",
+      "label": "Calidad preferida",
+      "labelEn": "Preferred quality",
+      "default": "auto",
+      "options": [
+        {
+          "value": "auto",
+          "label": "Automática (1080p)",
+          "labelEn": "Automatic (1080p)"
+        },
+        {
+          "value": "2160p",
+          "label": "2160p (4K)",
+          "labelEn": "2160p (4K)"
+        },
+        {
+          "value": "1080p",
+          "label": "1080p",
+          "labelEn": "1080p"
+        },
+        {
+          "value": "720p",
+          "label": "720p",
+          "labelEn": "720p"
+        },
+        {
+          "value": "480p",
+          "label": "480p",
+          "labelEn": "480p"
+        }
+      ],
+      "hint": "La copia más cercana va primera; las demás quedan en el menú Servidor.",
+      "hintEn": "The closest copy plays first; the rest stay in the Server menu."
+    },
+    {
+      "key": "maxSize",
+      "type": "select",
+      "label": "Tamaño máximo",
+      "labelEn": "Maximum size",
+      "default": "0",
+      "options": [
+        {
+          "value": "0",
+          "label": "Sin límite",
+          "labelEn": "No limit"
+        },
+        {
+          "value": "2",
+          "label": "2 GB",
+          "labelEn": "2 GB"
+        },
+        {
+          "value": "5",
+          "label": "5 GB",
+          "labelEn": "5 GB"
+        },
+        {
+          "value": "10",
+          "label": "10 GB",
+          "labelEn": "10 GB"
+        },
+        {
+          "value": "20",
+          "label": "20 GB",
+          "labelEn": "20 GB"
+        }
+      ],
+      "hint": "Oculta las copias más pesadas si hay otras.",
+      "hintEn": "Hides the heavier copies when there are others."
+    },
+    {
+      "key": "statusSection",
+      "type": "section",
+      "label": "Estado",
+      "labelEn": "Status"
+    },
+    {
+      "key": "serverStatus",
+      "type": "status",
+      "label": "Servidor",
+      "labelEn": "Server"
+    },
+    {
+      "key": "checkConn",
+      "type": "action",
+      "label": "Verificar conexión",
+      "labelEn": "Check connection"
+    }
+  ]
+}
