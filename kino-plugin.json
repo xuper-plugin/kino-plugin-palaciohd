@@ -1,7 +1,7 @@
 {
   "id": "palaciohd",
   "name": "Palacio HD",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "apiVersion": 9,
   "entry": "plugin.js",
   "description": "Puente a un servidor HD (protocolo de Stremio): películas y series con los títulos de TMDB, y TV en vivo. El servidor mantiene las fuentes.",

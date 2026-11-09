@@ -6,6 +6,9 @@
 // any of them and reads the live TV catalog and its genres from the server's manifest on every run.
 // Read it top to bottom: 1. texts  2. http  3. manifest  4. TMDB  5. titles  6. rows  7. streams  8. live  9. settings
 
+// Kino waits for every request a call left running before it delivers the call's answer; ask it to drop them once the call settles.
+globalThis.__kinoDropPendingFetches = true;
+
 const BASE = "https://hd.plavio.site";
 
 // ---- 1. texts ----------------------------------------------------------------------------------------------------
@@ -109,12 +112,19 @@ async function getJson(path, timeoutMs, onTimeout) {
   }
 }
 
-/** Runs `fn` over `list` with at most `limit` in flight; a failed item answers undefined. */
-async function pool(list, limit, fn) {
-  const out = new Array(list.length);
+/** Waits for `work` in short sleeps until it settles or `end` (a Date.now() value) passes; true when it settled. Never rejects. */
+async function settledBy(work, end) {
+  let done = false;
+  Promise.resolve(work).then(() => { done = true; }, () => { done = true; });
+  while (!done && Date.now() < end) await kino.sleep(Math.min(250, Math.max(1, end - Date.now())));
+  return done;
+}
+
+/** Runs `fn` over `list` with at most `limit` in flight; a failed item answers undefined. Past `end` no new item starts; `out` fills as items finish. */
+async function pool(list, limit, fn, end = Infinity, out = new Array(list.length)) {
   let next = 0;
   const worker = async () => {
-    while (next < list.length) {
+    while (next < list.length && Date.now() < end) {
       const i = next++;
       try { out[i] = await fn(list[i], i); } catch { out[i] = undefined; }
     }
@@ -404,9 +414,11 @@ function rowRef(spec) {
   return makeRef({ k: spec.kind, e: spec.endpoint, q: spec.q });
 }
 
-async function listRows(specs) {
+async function listRows(specs, end = Infinity) {
   const names = await genreNames();
-  const pages = await pool(specs, 5, async (spec) => (await fetchList(spec, 1)).results);
+  // the rows that came back by `end`; a list still loading is left off
+  const pages = new Array(specs.length);
+  await settledBy(pool(specs, 5, async (spec) => (await fetchList(spec, 1)).results, end, pages), end);
   const rows = [];
   specs.forEach((spec, i) => {
     const items = itemsOf(pages[i], spec.kind, names).slice(0, ROW_ITEMS);
@@ -446,13 +458,22 @@ function rowsSetting() {
   return n > 0 && n <= 12 ? n : 4;
 }
 
+/** Kino cuts a Home at 20 s: what has not loaded by then is left off and what has is shown. */
+const HOME_BUDGET_MS = 14000;
+
 export async function home() {
-  const manifest = await loadManifest(false);
+  const end = Date.now() + HOME_BUDGET_MS;
   const specs = mainSpecs("movie").concat(mainSpecs("series"));
   // Movies and series alternate, so a short Home shows both.
   const ordered = [];
   for (let i = 0; i < 4; i++) ordered.push(specs[i], specs[4 + i]);
-  const [rows, live] = await Promise.all([listRows(ordered.slice(0, rowsSetting())), liveHomeRows(manifest).catch(() => [])]);
+  let live = [];
+  let rows = [];
+  const liveJob = loadManifest(false).then(liveHomeRows).then((r) => { live = r; }, () => {});
+  const rowsJob = listRows(ordered.slice(0, rowsSetting()), end).then((r) => { rows = r; }, (e) => { kino.log("home rows: " + ((e && e.message) || "failed")); });
+  // the lists give up at `end` on their own; a moment more lets them hand over what they have
+  await settledBy(Promise.all([liveJob, rowsJob]), end + 1000);
+  if (!live.length && !rows.length) throw kino.error("unavailable", "no home row could be loaded", { userMessage: t("timeout") });
   return live.concat(rows);
 }
 
